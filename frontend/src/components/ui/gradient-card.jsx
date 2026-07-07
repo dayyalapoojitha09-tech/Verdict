@@ -48,56 +48,58 @@ const GradientCard = React.forwardRef(
     };
 
     return (
-      <motion.div
-        variants={cardAnimation}
-        initial="rest"
-        whileHover="hover"
-        animate="rest"
-        className="h-full relative group/card"
-        ref={ref}
-      >
-        <Link
-          to={ctaHref}
-          className={cn(cardVariants({ gradient }), "no-underline block", className)}
-          {...props}
+      <div className="h-full relative group/card">
+        <motion.div
+          variants={cardAnimation}
+          initial="rest"
+          whileHover="hover"
+          animate="rest"
+          className="h-full"
+          ref={ref}
         >
-          <div className="flex h-full gap-4">
-            {/* Left: Card Content */}
-            <div className="z-10 flex flex-col justify-between flex-1 min-w-0">
-              {/* Badge */}
-              <div>
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/50 px-3 py-1 text-sm font-medium text-neutral-700 backdrop-blur-sm w-fit">
-                  <span 
-                    className="h-2 w-2 rounded-full shrink-0" 
-                    style={{ backgroundColor: badgeColor }}
-                  />
-                  {badgeText}
+          <Link
+            to={ctaHref}
+            className={cn(cardVariants({ gradient }), "no-underline block", className)}
+            {...props}
+          >
+            <div className="flex h-full gap-4">
+              {/* Left: Card Content */}
+              <div className="z-10 flex flex-col justify-between flex-1 min-w-0">
+                {/* Badge */}
+                <div>
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/50 px-3 py-1 text-sm font-medium text-neutral-700 backdrop-blur-sm w-fit">
+                    <span 
+                      className="h-2 w-2 rounded-full shrink-0" 
+                      style={{ backgroundColor: badgeColor }}
+                    />
+                    {badgeText}
+                  </div>
+
+                  {/* Title and Description */}
+                  <h3 className="text-2xl font-bold text-black mb-2 tracking-tight">{title}</h3>
+                  <p className="text-neutral-600 text-sm leading-relaxed">{description}</p>
                 </div>
-
-                {/* Title and Description */}
-                <h3 className="text-2xl font-bold text-black mb-2 tracking-tight">{title}</h3>
-                <p className="text-neutral-600 text-sm leading-relaxed">{description}</p>
+                
+                {/* Call to Action */}
+                <span className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-black">
+                  {ctaText}
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </span>
               </div>
-              
-              {/* Call to Action */}
-              <span className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-black">
-                {ctaText}
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-              </span>
-            </div>
 
-            {/* Right: Image */}
-            <div className="w-[40%] shrink-0 flex items-center justify-center">
-              <motion.img
-                src={imageUrl}
-                alt={`${title} graphic`}
-                variants={imageAnimation}
-                transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                className="w-full h-auto max-h-full object-contain rounded-xl pointer-events-none"
-              />
+              {/* Right: Image */}
+              <div className="w-[40%] shrink-0 flex items-center justify-center">
+                <motion.img
+                  src={imageUrl}
+                  alt={`${title} graphic`}
+                  variants={imageAnimation}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="w-full h-auto max-h-full object-contain rounded-xl pointer-events-none"
+                />
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </motion.div>
 
         {onClear && (
           <button
@@ -106,13 +108,13 @@ const GradientCard = React.forwardRef(
               e.stopPropagation();
               onClear(e);
             }}
-            className="absolute top-6 right-6 z-20 text-neutral-400 hover:text-red-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-black/5"
+            className="absolute top-6 right-6 z-30 text-neutral-400 hover:text-red-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-black/5"
             title="Clear Case"
           >
             <X className="w-5 h-5" />
           </button>
         )}
-      </motion.div>
+      </div>
     );
   }
 );

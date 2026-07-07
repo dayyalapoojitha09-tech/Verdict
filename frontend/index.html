@@ -11,6 +11,14 @@
   </head>
   <body class="bg-white text-black font-sans antialiased min-h-screen cursor-none">
     <div id="root" class="min-h-screen flex flex-col"></div>
+    <script>
+      // One-time cleanup: remove stale custom cases from localStorage
+      if (!localStorage.getItem("verdict_storage_cleaned")) {
+        localStorage.removeItem("verdict_custom_cases");
+        localStorage.removeItem("verdict_cleared_cases");
+        localStorage.setItem("verdict_storage_cleaned", "true");
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
