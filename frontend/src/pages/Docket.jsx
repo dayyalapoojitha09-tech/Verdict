@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, ArrowRight, Loader2 } from "lucide-react";
-import securityBg from "../assets/security_bg.png";
-import fraudBg from "../assets/fraud_bg.png";
+import { GradientCard } from "@/components/ui/gradient-card";
+import securityBg from "../assets/security_card.png";
+import fraudBg from "../assets/fraud_card.png";
+import complianceBg from "../assets/compliance_card.png";
+import cybercrimeBg from "../assets/cybercrime_card.png";
+import forensicsBg from "../assets/forensics_card.png";
+import aiEthicsBg from "../assets/ai_ethics_card.png";
+import hrBg from "../assets/hr_card.png";
+import operationsBg from "../assets/operations_card.png";
+import healthcareBg from "../assets/healthcare_card.png";
+import legalBg from "../assets/legal_card.png";
 import staticCases from "../data/cases.json";
 
 export const getDomainStyle = (domain) => {
@@ -19,6 +28,51 @@ export const getDomainStyle = (domain) => {
     "Digital Forensics": "bg-cyan-50 text-cyan-700 border-cyan-200"
   };
   return styles[domain] || "bg-neutral-50 text-neutral-700 border-neutral-200";
+};
+
+const domainImages = {
+  Security: securityBg,
+  Fraud: fraudBg,
+  Compliance: complianceBg,
+  Cybercrime: cybercrimeBg,
+  "Digital Forensics": forensicsBg,
+  "AI Ethics": aiEthicsBg,
+  HR: hrBg,
+  Operations: operationsBg,
+  Healthcare: healthcareBg,
+  Legal: legalBg,
+};
+
+const getDomainGradient = (domain) => {
+  const gradients = {
+    Security: "red",
+    Fraud: "orange",
+    Cybercrime: "purple",
+    Compliance: "green",
+    HR: "pink",
+    Operations: "blue",
+    Healthcare: "teal",
+    Legal: "slate",
+    "AI Ethics": "indigo",
+    "Digital Forensics": "cyan",
+  };
+  return gradients[domain] || "gray";
+};
+
+const getDomainBadgeColor = (domain) => {
+  const colors = {
+    Security: "#EF4444",
+    Fraud: "#F59E0B",
+    Cybercrime: "#8B5CF6",
+    Compliance: "#10B981",
+    HR: "#EC4899",
+    Operations: "#3B82F6",
+    Healthcare: "#14B8A6",
+    Legal: "#64748B",
+    "AI Ethics": "#6366F1",
+    "Digital Forensics": "#06B6D4",
+  };
+  return colors[domain] || "#4B5563";
 };
 
 export default function Docket() {
@@ -63,9 +117,9 @@ export default function Docket() {
   const displayMarquee = cases.length > 0 ? cases : defaultMarqueeItems;
   const marqueeLoop = [...displayMarquee, ...displayMarquee, ...displayMarquee, ...displayMarquee];
 
-  // Helper to determine image
+  // Helper to determine image based on domain
   const getCaseImage = (domain) => {
-    return domain === "Security" ? securityBg : fraudBg;
+    return domainImages[domain] || securityBg;
   };
 
   // Helper to determine border radii style based on index
@@ -150,7 +204,7 @@ export default function Docket() {
         </h2>
       </section>
 
-      {/* 4. Project Grid */}
+      {/* 4. Project Grid — Gradient Cards */}
       <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-16 border-b border-black/10 pb-6">
           <h2 className="headline-huge text-4xl uppercase tracking-tighter">Active Alerts</h2>
@@ -162,48 +216,19 @@ export default function Docket() {
             <p className="text-sm font-mono uppercase tracking-widest text-neutral-400">No active alerts currently filed</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-            {cases.map((item, idx) => (
-              <Link
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+            {cases.map((item) => (
+              <GradientCard
                 key={item.id}
-                to={`/trial/${item.id}`}
-                className="group flex flex-col space-y-4 cursor-pointer"
-              >
-                {/* 4:3 Image container with slight rounding and hover overlay */}
-                <div className="relative overflow-hidden aspect-[4/3] rounded bg-neutral-100 border border-black/10">
-                  <img
-                    src={getCaseImage(item.domain)}
-                    alt={item.title}
-                    className="w-full h-full object-cover img-editorial"
-                  />
-                  <div className="absolute inset-0 bg-transparent group-hover:bg-black/10 transition-colors duration-500" />
-                  
-                  {/* Top-right arrow appearing on hover */}
-                  <div className="absolute top-4 right-4 bg-white/90 p-2 rounded-full border border-black/10 opacity-0 transform translate-x-2 -translate-y-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:translate-y-0 transition-all duration-500 ease-out">
-                    <ArrowUpRight className="w-5 h-5 text-black" />
-                  </div>
-                </div>
-
-                {/* Metadata row */}
-                <div className="pt-4 border-t border-black/10 flex items-center justify-between w-full">
-                  <div className="space-y-2 max-w-[75%]">
-                    <h3 className="text-xl font-bold tracking-tight group-hover:underline transition-all duration-300 truncate">
-                      {item.title}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border ${getDomainStyle(item.domain)}`}>
-                        {item.domain}
-                      </span>
-                      <span className="text-xs font-mono text-neutral-400">
-                        ID: {item.id.slice(0, 8)}
-                      </span>
-                    </div>
-                  </div>
-                  <span className="meta-mono text-xs text-neutral-600 bg-neutral-100 border border-black/10 px-2.5 py-1 rounded">
-                    {item.status === "verdict_reached" ? "CLOSED" : "PENDING"}
-                  </span>
-                </div>
-              </Link>
+                badgeText={item.status === "verdict_reached" ? "Verdict Reached" : "Pending Review"}
+                badgeColor={getDomainBadgeColor(item.domain)}
+                title={item.title}
+                description={item.description}
+                ctaText="Explore Dossier"
+                ctaHref={`/trial/${item.id}`}
+                imageUrl={getCaseImage(item.domain)}
+                gradient={getDomainGradient(item.domain)}
+              />
             ))}
           </div>
         )}

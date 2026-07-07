@@ -1,8 +1,7 @@
 import os
 import json
-import urllib.request
-import urllib.error
 from dotenv import load_dotenv
+from groq import Groq
 
 # Load environment variables
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -22,14 +21,10 @@ def call_grok_api(system_instruction: str, user_message: str, response_json: boo
 
     if not active_key:
         raise RuntimeError("Groq API key is missing. Please add GROK_API_KEY to your .env file.")
-        
-    url = "https://api.groq.com/openai/v1/chat/completions"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {active_key}",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-    payload = {
+
+    client = Groq(api_key=active_key)
+
+    kwargs = {
         "model": MODEL_NAME,
         "messages": [
             {"role": "system", "content": system_instruction},
@@ -38,19 +33,13 @@ def call_grok_api(system_instruction: str, user_message: str, response_json: boo
         "temperature": 0.2
     }
     if response_json:
-        payload["response_format"] = {"type": "json_object"}
+        kwargs["response_format"] = {"type": "json_object"}
 
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     try:
-        with urllib.request.urlopen(req) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
-            return res_data["choices"][0]["message"]["content"]
-    except urllib.error.HTTPError as e:
-        err_msg = e.read().decode("utf-8")
-        raise RuntimeError(f"API error: {e.code} - {err_msg}")
+        completion = client.chat.completions.create(**kwargs)
+        return completion.choices[0].message.content
     except Exception as e:
-        raise RuntimeError(f"Failed to communicate with API: {str(e)}")
+        raise RuntimeError(f"Failed to communicate with Groq API: {str(e)}")
 
 def run_prosecutor(title: str, description: str, evidence_notes: str) -> str:
     system_instruction = (
