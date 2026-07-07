@@ -3,9 +3,11 @@ import json
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load environment variables
+# Load environment variables — try .env first, then fall back to new.env (which is tracked by git for collaborators)
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+new_dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "new.env")
 load_dotenv(dotenv_path)
+load_dotenv(new_dotenv_path)  # fallback: won't overwrite existing keys from .env
 
 grok_api_key = os.environ.get("GROK_API_KEY") or os.environ.get("GROQ_API_KEY")
 

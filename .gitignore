@@ -23,7 +23,10 @@ ENV/
 env.bak/
 venv.bak/
 backend/.env
+backend/new.env
 backend/verdict.db
+backend/fix_data.py
+backend/check_all.py
 
 # Editors
 .vscode/

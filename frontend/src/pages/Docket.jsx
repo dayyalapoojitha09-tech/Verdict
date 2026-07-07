@@ -136,36 +136,54 @@ export default function Docket() {
       });
   }, []);
 
+  const clearCaseLocally = (caseId) => {
+    // 1. Add to cleared cases list in localStorage
+    const clearedStr = localStorage.getItem("verdict_cleared_cases") || "[]";
+    const cleared = JSON.parse(clearedStr);
+    if (!cleared.includes(caseId)) {
+      cleared.push(caseId);
+      localStorage.setItem("verdict_cleared_cases", JSON.stringify(cleared));
+    }
+    
+    // 2. Remove from custom cases in localStorage if present
+    const customStr = localStorage.getItem("verdict_custom_cases") || "[]";
+    const custom = JSON.parse(customStr);
+    const updatedCustom = custom.filter(c => c.id !== caseId);
+    localStorage.setItem("verdict_custom_cases", JSON.stringify(updatedCustom));
+    
+    // 3. Update react state to immediately remove from DOM
+    setCases(prev => prev.filter(c => c.id !== caseId));
+  };
+
   const handleClear = (caseId) => {
     if (window.confirm("Clear this case? This cannot be undone.")) {
       fetch(`http://localhost:8000/api/cases/${caseId}`, {
         method: "DELETE"
       })
         .then((res) => {
+          if (res.status === 404) {
+            // Case doesn't exist in backend DB (local-only case) — clear locally
+            clearCaseLocally(caseId);
+            return;
+          }
           if (!res.ok) throw new Error("Failed to delete case from database.");
           return res.json();
         })
-        .then(() => {
-          // 1. Add to cleared cases list in localStorage
-          const clearedStr = localStorage.getItem("verdict_cleared_cases") || "[]";
-          const cleared = JSON.parse(clearedStr);
-          if (!cleared.includes(caseId)) {
-            cleared.push(caseId);
-            localStorage.setItem("verdict_cleared_cases", JSON.stringify(cleared));
+        .then((data) => {
+          if (data) {
+            // Successfully deleted from backend — now clear locally too
+            clearCaseLocally(caseId);
           }
-          
-          // 2. Remove from custom cases in localStorage if present
-          const customStr = localStorage.getItem("verdict_custom_cases") || "[]";
-          const custom = JSON.parse(customStr);
-          const updatedCustom = custom.filter(c => c.id !== caseId);
-          localStorage.setItem("verdict_custom_cases", JSON.stringify(updatedCustom));
-          
-          // 3. Update react state to immediately remove from DOM
-          setCases(prev => prev.filter(c => c.id !== caseId));
         })
         .catch((err) => {
-          console.error("Error clearing case:", err);
-          alert("Error clearing case: " + err.message);
+          // If backend is offline, still allow local clearing
+          if (err.message === "Failed to fetch" || err.name === "TypeError") {
+            console.warn("Backend offline, clearing case locally:", caseId);
+            clearCaseLocally(caseId);
+          } else {
+            console.error("Error clearing case:", err);
+            alert("Error clearing case: " + err.message);
+          }
         });
     }
   };
