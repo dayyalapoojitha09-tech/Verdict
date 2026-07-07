@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Scale, ShieldAlert, ArrowLeft, Loader2, Sparkles, MessageSquareDot, HelpCircle, AlertTriangle } from "lucide-react";
 import staticCases from "../data/cases.json";
+import { getDomainStyle } from "./Docket";
 
 function ConfidenceRing({ percentage }) {
   const radius = 36;
@@ -187,7 +188,7 @@ export default function Trial() {
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-black/10 pb-4">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-mono border border-black px-2 py-0.5 uppercase tracking-widest">
+            <span className={`text-xs font-mono border px-2 py-0.5 uppercase tracking-widest font-bold rounded ${getDomainStyle(caseData.domain)}`}>
               {caseData.domain}
             </span>
             <span className="text-xs font-mono text-neutral-400">ID: {caseData.id}</span>

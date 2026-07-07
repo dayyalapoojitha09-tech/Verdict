@@ -51,8 +51,12 @@ class CreateCaseSchema(BaseModel):
 
 @app.post("/api/cases")
 def create_case(payload: CreateCaseSchema):
-    if payload.domain not in ["Security", "Fraud"]:
-        raise HTTPException(status_code=400, detail="Domain must be exactly 'Security' or 'Fraud'")
+    allowed_domains = [
+        "Security", "Fraud", "Cybercrime", "Compliance", "HR", 
+        "Operations", "Healthcare", "Legal", "AI Ethics", "Digital Forensics"
+    ]
+    if payload.domain not in allowed_domains:
+        raise HTTPException(status_code=400, detail=f"Domain must be one of {allowed_domains}")
     if not payload.title.strip() or not payload.description.strip():
         raise HTTPException(status_code=400, detail="Title and description cannot be empty")
         

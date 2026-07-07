@@ -1,54 +1,57 @@
-# Docket Alert Count Bug Fix - Walkthrough
+# Add New Case Feature — Walkthrough
 
-The "Active Alerts" page has been cleaned up. Here is a summary of the investigations, changes, and verification.
+I have successfully implemented the "Add New Case" feature. Here is a summary of the implementation and verification results.
 
-## 1. Case Data Query & Findings
+## 1. Implemented Changes
 
-### Database State (`verdict.db`)
-Prior to the cleanup, querying the `cases` table revealed **6 cases** in total:
-1. `d7b5b5c1-1406-444f-836e-9896503c004a` — **Suspicious Login — New Location, Off Hours** (Security)
-2. `6f481c19-97ef-4613-883a-4de3670de8d2` — **Unusual High-Value Transaction** (Fraud)
-3. `f9ab2cd3-5b8d-4e92-a1f9-cf6e0cb708d7` — **After-Hours Bulk Data Access** (Security)
-4. `17a7da22-4c93-4c6f-a1d8-e36c0e09a8d7` — **Suspicious AWS API activity** (Security)
-5. `51fee52a-a007-4131-9acb-589680bbeb06` — **Host Privilege Escalation** (Security)
-6. `5ca95f8a-fa0e-44ae-b8d9-c9d19e0391f5` — **Unauthorized SSH Login Attempt** (Security)
+### Backend Changes (`main.py`)
+* Updated the `CreateCaseSchema` endpoint to support all 10 domain categories:
+  * *Security, Fraud, Cybercrime, Compliance, HR, Operations, Healthcare, Legal, AI Ethics, Digital Forensics*
 
-### Frontend Mock/Placeholder Data
-In `frontend/src/pages/Docket.jsx`, the `defaultMarqueeItems` array contained 4 mock cases that were displaying in the marquee header, some of which had names not matching the specified seed cases:
-* *Endpoint Intrusion Detection*
-* *System Ledger Inconsistency*
-* *Database Credential Dump*
-* *Suspicious API Node Escalation*
+### Frontend Router and Header (`App.jsx`)
+* Wired the "+" icon in the top-right header to link to the new `/add` route.
+* Set up the `/add` route mapping to the new `AddCase` page component.
 
----
+### New Add Case Page (`AddCase.jsx`)
+* Built a standalone, high-contrast, minimalist input form matching the courtroom style.
+* Standardized validation requiring **Title**, **Domain**, and **Description**.
+* Optional **Evidence Notes** and **Counter-Evidence Notes** are handled gracefully by defaulting to placeholder text.
+* Automatically saves the successfully created case JSON returned from the backend to the local storage dataset `verdict_custom_cases` before navigating back to `/`.
 
-## 2. Root Cause Analysis
-* **Database entries**: The extra 3 cases (Suspicious AWS API activity, Host Privilege Escalation, and Unauthorized SSH Login Attempt) were manually submitted cases/trial logs added in the database during previous trial pipeline executions.
-* **Frontend items**: The marquee was configured to fall back to a mock array `defaultMarqueeItems` containing placeholder names instead of the 3 canonical cases.
-
----
-
-## 3. Implemented Fixes
-
-### A. Database Cleanup
-We deleted the 3 extraneous cases and their corresponding trial logs from `verdict.db` via SQL queries, preserving ONLY the three seed cases specified in the brief:
-* **Suspicious Login — New Location, Off Hours**
-* **Unusual High-Value Transaction**
-* **After-Hours Bulk Data Access**
-
-### B. Frontend Mock Data Update
-We updated `defaultMarqueeItems` in `frontend/src/pages/Docket.jsx` to match the canonical 3 seed cases, mapping their actual database IDs. The marquee now links directly to their active trial paths.
-
-### C. Static JSON Local Data Migration
-To prevent "DOCKET CONNECTION REFUSED" errors when the backend server is not running on a developer's local machine, we migrated the docket listing to load directly from a local static data source:
-1. Created [cases.json](file:///c:/Users/pooji/.gemini/antigravity-ide/scratch/verdict_claude/frontend/src/data/cases.json) containing the 3 canonical seed cases.
-2. Updated [Docket.jsx](file:///c:/Users/pooji/.gemini/antigravity-ide/scratch/verdict_claude/frontend/src/pages/Docket.jsx) to load from `cases.json` and persist custom cases to `localStorage` (falling back gracefully to offline mode if the API server is down).
-3. Updated [Trial.jsx](file:///c:/Users/pooji/.gemini/antigravity-ide/scratch/verdict_claude/frontend/src/pages/Trial.jsx) to load case dossiers locally from the JSON registry based on `caseId`, querying the backend only for trial log records.
+### Domain Badge Styling (`Docket.jsx`, `Trial.jsx`)
+* Created a cohesive, tailored domain color map:
+  * **Security**: Red (`bg-red-50 text-red-700 border-red-200`)
+  * **Fraud**: Orange (`bg-orange-50 text-orange-700 border-orange-200`)
+  * **Cybercrime**: Purple (`bg-purple-50 text-purple-700 border-purple-200`)
+  * **Compliance**: Green (`bg-green-50 text-green-700 border-green-200`)
+  * **HR**: Pink (`bg-pink-50 text-pink-700 border-pink-200`)
+  * **Operations**: Blue (`bg-blue-50 text-blue-700 border-blue-200`)
+  * **Healthcare**: Teal (`bg-teal-50 text-teal-700 border-teal-200`)
+  * **Legal**: Slate (`bg-slate-100 text-slate-700 border-slate-300`)
+  * **AI Ethics**: Indigo (`bg-indigo-50 text-indigo-700 border-indigo-200`)
+  * **Digital Forensics**: Cyan (`bg-cyan-50 text-cyan-700 border-cyan-200`)
+* Rendered the domains as styled pill badges on both the alert cards in `Docket.jsx` and the case header on `Trial.jsx`.
+* Removed the obsolete inline form at the bottom of the docket page to consolidate the creation workflow.
 
 ---
 
-## 4. Verification
+## 2. Interactive Verification Results
 
-We confirmed that the Active Alerts docket page renders flawlessly even when the backend server is offline, listing exactly the 3 specified cases:
+The browser subagent successfully executed the entire test suite:
+1. Navigated to the new `/add` route.
+2. Submitted a new **Compliance** case.
+3. Verified the case immediately appeared on the Active Alerts docket.
+4. Confirmed the badge styling was the correct custom **Green** color.
+5. Opened the trial page and ran the **Convene Tribunal** pipeline successfully.
 
-![Working Docket UI](/C:/Users/pooji/.gemini/antigravity-ide/brain/063ea15f-1239-444a-92c6-d73d209b0899/working_docket_page_1783431176833.png)
+### Form Screenshot:
+![Add Case Form](/C:/Users/pooji/.gemini/antigravity-ide/brain/063ea15f-1239-444a-92c6-d73d209b0899/add_case_form_filled_1783439446417.png)
+
+### Docket List Badge Screenshot:
+![New Case on Docket](/C:/Users/pooji/.gemini/antigravity-ide/brain/063ea15f-1239-444a-92c6-d73d209b0899/new_case_docket_1783439510283.png)
+
+### Successful Deliberation Screen:
+![AI Tribunal Deliberation Output](/C:/Users/pooji/.gemini/antigravity-ide/brain/063ea15f-1239-444a-92c6-d73d209b0899/completed_trial_1783439651005.png)
+
+### Video Recording of Subagent Run:
+![Subagent Run Recording](/C:/Users/pooji/.gemini/antigravity-ide/brain/063ea15f-1239-444a-92c6-d73d209b0899/compliance_flow_fixed_1783439198253.webp)

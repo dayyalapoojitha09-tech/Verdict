@@ -1,80 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, ArrowRight, ShieldCheck, Loader2, AlertCircle } from "lucide-react";
+import { ArrowUpRight, ArrowRight, Loader2 } from "lucide-react";
 import securityBg from "../assets/security_bg.png";
 import fraudBg from "../assets/fraud_bg.png";
 import staticCases from "../data/cases.json";
 
+export const getDomainStyle = (domain) => {
+  const styles = {
+    Security: "bg-red-50 text-red-700 border-red-200",
+    Fraud: "bg-orange-50 text-orange-700 border-orange-200",
+    Cybercrime: "bg-purple-50 text-purple-700 border-purple-200",
+    Compliance: "bg-green-50 text-green-700 border-green-200",
+    HR: "bg-pink-50 text-pink-700 border-pink-200",
+    Operations: "bg-blue-50 text-blue-700 border-blue-200",
+    Healthcare: "bg-teal-50 text-teal-700 border-teal-200",
+    Legal: "bg-slate-100 text-slate-700 border-slate-300",
+    "AI Ethics": "bg-indigo-50 text-indigo-700 border-indigo-200",
+    "Digital Forensics": "bg-cyan-50 text-cyan-700 border-cyan-200"
+  };
+  return styles[domain] || "bg-neutral-50 text-neutral-700 border-neutral-200";
+};
+
 export default function Docket() {
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Form States
-  const [title, setTitle] = useState("");
-  const [domain, setDomain] = useState("Security");
-  const [description, setDescription] = useState("");
-  const [evidenceNotes, setEvidenceNotes] = useState("");
-  const [counterEvidenceNotes, setCounterEvidenceNotes] = useState("");
-  
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState(null);
 
   useEffect(() => {
-    setCases(staticCases);
-    setLoading(false);
-  }, []);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setFormError(null);
-
-    // Validation
-    if (!title.trim() || !description.trim() || !evidenceNotes.trim() || !counterEvidenceNotes.trim()) {
-      setFormError("Please populate all case dossier fields before filing.");
-      return;
-    }
-
-    setSubmitting(true);
-
-    const payload = {
-      title: title.trim(),
-      domain: domain,
-      description: description.trim(),
-      evidence_notes: evidenceNotes.trim(),
-      counter_evidence_notes: counterEvidenceNotes.trim(),
-    };
-
-    fetch("http://localhost:8000/api/cases", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((json) => {
-            throw new Error(json.detail || "Failed to submit new case.");
-          });
+    try {
+      const storedCases = localStorage.getItem("verdict_custom_cases");
+      const customCases = storedCases ? JSON.parse(storedCases) : [];
+      
+      const allCases = [...staticCases];
+      customCases.forEach(customCase => {
+        if (!allCases.some(c => c.id === customCase.id)) {
+          allCases.push(customCase);
         }
-        return res.json();
-      })
-      .then((newCase) => {
-        setSubmitting(false);
-        setCases((prev) => [...prev, newCase]);
-        setTitle("");
-        setDomain("Security");
-        setDescription("");
-        setEvidenceNotes("");
-        setCounterEvidenceNotes("");
-        setFormError(null);
-      })
-      .catch((err) => {
-        setFormError("Failed to file dossier: connection to the courtroom database failed.");
-        setSubmitting(false);
       });
-  };
+      
+      setCases(allCases);
+      setLoading(false);
+    } catch (err) {
+      setCases(staticCases);
+      setLoading(false);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -182,25 +151,19 @@ export default function Docket() {
       </section>
 
       {/* 4. Project Grid */}
-      <section className="max-w-6xl mx-auto px-6 py-24 border-b border-black/10">
+      <section className="max-w-6xl mx-auto px-6 py-24">
         <div className="flex flex-col md:flex-row justify-between items-baseline mb-16 border-b border-black/10 pb-6">
           <h2 className="headline-huge text-4xl uppercase tracking-tighter">Active Alerts</h2>
           <span className="meta-mono text-neutral-400 text-xs">{cases.length} alerts filed on docket</span>
         </div>
 
-        {error ? (
-          <div className="p-8 text-center bg-neutral-50 border border-neutral-200 rounded-lg max-w-md mx-auto">
-            <AlertCircle className="w-8 h-8 text-black mx-auto mb-4" />
-            <p className="text-sm font-mono uppercase tracking-widest text-black">Docket Connection Refused</p>
-            <p className="text-xs text-neutral-500 mt-2">{error}</p>
-          </div>
-        ) : cases.length === 0 ? (
+        {cases.length === 0 ? (
           <div className="text-center py-20 bg-neutral-50 border border-black/10">
             <p className="text-sm font-mono uppercase tracking-widest text-neutral-400">No active alerts currently filed</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-            {cases.map((item) => (
+            {cases.map((item, idx) => (
               <Link
                 key={item.id}
                 to={`/trial/${item.id}`}
@@ -222,14 +185,19 @@ export default function Docket() {
                 </div>
 
                 {/* Metadata row */}
-                <div className="pt-4 border-t border-black/10 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xl font-bold tracking-tight group-hover:underline transition-all duration-300">
+                <div className="pt-4 border-t border-black/10 flex items-center justify-between w-full">
+                  <div className="space-y-2 max-w-[75%]">
+                    <h3 className="text-xl font-bold tracking-tight group-hover:underline transition-all duration-300 truncate">
                       {item.title}
                     </h3>
-                    <p className="text-xs font-mono text-neutral-400 uppercase tracking-widest">
-                      {item.domain} &mdash; ID: {item.id.slice(0, 8)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2.5 py-0.5 rounded border ${getDomainStyle(item.domain)}`}>
+                        {item.domain}
+                      </span>
+                      <span className="text-xs font-mono text-neutral-400">
+                        ID: {item.id.slice(0, 8)}
+                      </span>
+                    </div>
                   </div>
                   <span className="meta-mono text-xs text-neutral-600 bg-neutral-100 border border-black/10 px-2.5 py-1 rounded">
                     {item.status === "verdict_reached" ? "CLOSED" : "PENDING"}
@@ -239,110 +207,6 @@ export default function Docket() {
             ))}
           </div>
         )}
-      </section>
-
-      {/* 5. Inline Case Filing Dossier Section */}
-      <section className="max-w-3xl mx-auto px-6 py-24">
-        <div className="text-center space-y-4 mb-16">
-          <span className="meta-mono text-neutral-400 text-xs">ALERT FILING DOSSIER</span>
-          <h2 className="headline-huge text-4xl uppercase tracking-tighter">Submit New Case</h2>
-          <p className="text-neutral-500 text-sm max-w-md mx-auto">
-            Input a threat intelligence alert dossier. The adversarial debate pipeline will process the logs and counter-arguments end-to-end.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8 bg-neutral-50 border border-black/10 p-8 rounded-lg">
-          {formError && (
-            <div className="flex items-start gap-2.5 bg-neutral-100 border border-black/20 p-4 rounded text-black text-xs font-mono">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{formError}</span>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Title */}
-            <div className="md:col-span-2 flex flex-col space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-500">Case Title</label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Host-Level Process Injection"
-                className="bg-transparent border-b border-black/20 focus:border-black py-2 px-1 text-sm text-black transition-colors focus:outline-none rounded-none"
-              />
-            </div>
-
-            {/* Domain */}
-            <div className="flex flex-col space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-neutral-500">Domain Category</label>
-              <select
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                className="bg-transparent border-b border-black/20 focus:border-black py-2 px-1 text-sm text-black transition-colors focus:outline-none rounded-none cursor-pointer"
-              >
-                <option value="Security">Security</option>
-                <option value="Fraud">Fraud</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="flex flex-col space-y-2">
-            <label className="text-xs font-mono uppercase tracking-wider text-neutral-500">Dossier Summary / Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Outline the detected threat vector or ledger anomaly details..."
-              rows="2"
-              className="bg-transparent border-b border-black/20 focus:border-black py-2 px-1 text-sm text-black transition-colors focus:outline-none resize-none rounded-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Incriminating Evidence */}
-            <div className="flex flex-col space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-black font-bold">Incriminating Logs / Evidence</label>
-              <textarea
-                value={evidenceNotes}
-                onChange={(e) => setEvidenceNotes(e.target.value)}
-                placeholder="List IP details, network dumps, event logs, access tokens..."
-                rows="4"
-                className="bg-transparent border-b border-black/20 focus:border-black py-2 px-1 text-sm text-black font-light leading-relaxed transition-colors focus:outline-none resize-none rounded-none"
-              />
-            </div>
-
-            {/* Exculpatory Counter Evidence */}
-            <div className="flex flex-col space-y-2">
-              <label className="text-xs font-mono uppercase tracking-wider text-black font-bold">Exculpatory Counter-Evidence</label>
-              <textarea
-                value={counterEvidenceNotes}
-                onChange={(e) => setCounterEvidenceNotes(e.target.value)}
-                placeholder="List support ticket context, calendar entries, travel, explanations..."
-                rows="4"
-                className="bg-transparent border-b border-black/20 focus:border-black py-2 px-1 text-sm text-black font-light leading-relaxed transition-colors focus:outline-none resize-none rounded-none"
-              />
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 py-4 bg-black text-white hover:bg-neutral-800 disabled:opacity-50 text-sm font-mono uppercase tracking-widest transition-all duration-300 cursor-pointer"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Filing Dossier...
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="w-4 h-4" />
-                File Dossier to Courtroom
-              </>
-            )}
-          </button>
-        </form>
       </section>
     </div>
   );

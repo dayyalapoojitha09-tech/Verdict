@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Docket from "./pages/Docket";
 import Trial from "./pages/Trial";
+import AddCase from "./pages/AddCase";
 import CustomCursor from "./components/CustomCursor";
 import { Plus } from "lucide-react";
 
@@ -16,9 +17,9 @@ function App() {
         <Link to="/" className="pointer-events-auto flex items-center gap-1 hover:opacity-80 transition-opacity">
           <span className="text-2xl font-bold tracking-tighter text-white lowercase">verdict</span>
         </Link>
-        <button className="pointer-events-auto text-white hover:rotate-90 transition-transform duration-300">
+        <Link to="/add" className="pointer-events-auto text-white hover:rotate-90 transition-transform duration-300">
           <Plus className="w-6 h-6" />
-        </button>
+        </Link>
       </header>
 
       {/* Page Content */}
@@ -26,6 +27,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Docket />} />
           <Route path="/trial/:caseId" element={<Trial />} />
+          <Route path="/add" element={<AddCase />} />
         </Routes>
       </main>
 
