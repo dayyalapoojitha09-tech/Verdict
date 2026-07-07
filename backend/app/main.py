@@ -8,10 +8,10 @@ from app.ai import run_prosecutor, run_defense, run_judge
 
 app = FastAPI(title="VERDICT API Backend")
 
-# Configure CORS so the React app running on localhost:5173 can call this API
+# Configure CORS so the React app can call this API from any Vite dev port
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
