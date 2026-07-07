@@ -1,0 +1,29 @@
+[
+  {
+    "id": "d7b5b5c1-1406-444f-836e-9896503c004a",
+    "title": "Suspicious Login — New Location, Off Hours",
+    "domain": "Security",
+    "description": "A login was detected from an unrecognized location outside normal business hours.",
+    "evidence_notes": "IP address was flagged in a credential-stuffing incident 6 months ago. Login occurred at 3:14 AM from Romania. Account normally logs in from India between 9am-6pm. Device fingerprint does not match any previous session on record.",
+    "counter_evidence_notes": "Employee's calendar shows 'Conference - Bucharest' scheduled for this week. Company travel booking system shows a flight was booked 2 weeks ago for this employee.",
+    "status": "pending"
+  },
+  {
+    "id": "6f481c19-97ef-4613-883a-4de3670de8d2",
+    "title": "Unusual High-Value Transaction",
+    "domain": "Fraud",
+    "description": "A transaction was flagged for being significantly larger than the account's typical spending pattern.",
+    "evidence_notes": "Charge of $4,000 vs. an average monthly spend of $50-100. Shipping address is new — never used on this account before. Purchase category is electronics, but past purchase history is groceries and subscriptions. Transaction occurred within 90 seconds of a password reset.",
+    "counter_evidence_notes": "Customer contacted support 3 days prior asking about an upcoming large purchase as a gift. The shipping address matches a 'recently added address' entry from 2 weeks ago in the account's profile settings.",
+    "status": "pending"
+  },
+  {
+    "id": "f9ab2cd3-5b8d-4e92-a1f9-cf6e0cb708d7",
+    "title": "After-Hours Bulk Data Access",
+    "domain": "Security",
+    "description": "A large volume of customer records was downloaded outside normal working hours.",
+    "evidence_notes": "15,000 customer records downloaded at 11:47 PM on a Saturday. Employee's role is 'Junior Support Agent,' which does not require data-export permissions. No prior download activity exists in this employee 8-month account history.",
+    "counter_evidence_notes": "Employee's manager sent an email 2 hours before the download requesting an urgent weekend data pull for a compliance audit. Internal helpdesk ticket #4471 references this exact request.",
+    "status": "pending"
+  }
+]
