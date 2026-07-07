@@ -136,6 +136,20 @@ export default function Trial() {
         setTrialLogs(data);
         setRunningTrial(false);
         
+        // Also update the case status in localStorage to 'verdict_reached'
+        try {
+          const storedCases = localStorage.getItem("verdict_custom_cases");
+          if (storedCases) {
+            const customCases = JSON.parse(storedCases);
+            const updatedCases = customCases.map(c => 
+              c.id === caseId ? { ...c, status: "verdict_reached" } : c
+            );
+            localStorage.setItem("verdict_custom_cases", JSON.stringify(updatedCases));
+          }
+        } catch (e) {
+          console.error("Failed to update custom case status in local storage:", e);
+        }
+        
         setShowProsecutor(true);
         
         setTimeout(() => {

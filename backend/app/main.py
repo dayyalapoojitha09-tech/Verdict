@@ -101,6 +101,24 @@ def get_case(case_id: str):
         raise HTTPException(status_code=404, detail="Case not found")
     return dict(row)
 
+@app.delete("/api/cases/{case_id}")
+def delete_case(case_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM cases WHERE id = ?", (case_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Case not found")
+    
+    # Delete from trial_logs first (foreign key reference)
+    cursor.execute("DELETE FROM trial_logs WHERE case_id = ?", (case_id,))
+    # Delete from cases
+    cursor.execute("DELETE FROM cases WHERE id = ?", (case_id,))
+    conn.commit()
+    conn.close()
+    return {"status": "success", "message": "Case and associated trial logs cleared."}
+
 @app.get("/api/cases/{case_id}/trial")
 def get_trial_log(case_id: str):
     conn = get_db_connection()

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ const cardVariants = cva(
 );
 
 const GradientCard = React.forwardRef(
-  ({ className, gradient, badgeText, badgeColor, title, description, ctaText, ctaHref, imageUrl, ...props }, ref) => {
+  ({ className, gradient, badgeText, badgeColor, title, description, ctaText, ctaHref, imageUrl, onClear, ...props }, ref) => {
     
     // Animation variants for framer-motion
     const cardAnimation = {
@@ -53,7 +53,7 @@ const GradientCard = React.forwardRef(
         initial="rest"
         whileHover="hover"
         animate="rest"
-        className="h-full"
+        className="h-full relative group/card"
         ref={ref}
       >
         <Link
@@ -98,6 +98,20 @@ const GradientCard = React.forwardRef(
             </div>
           </div>
         </Link>
+
+        {onClear && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClear(e);
+            }}
+            className="absolute top-6 right-6 z-20 text-neutral-400 hover:text-red-600 hover:scale-110 active:scale-95 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-black/5"
+            title="Clear Case"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </motion.div>
     );
   }

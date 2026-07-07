@@ -80,24 +80,95 @@ export default function Docket() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1. Gather all local cases (seeded + custom cases from localStorage)
+    let localCases = [...staticCases];
+    let clearedCases = [];
+    
+    try {
+      const clearedStr = localStorage.getItem("verdict_cleared_cases");
+      clearedCases = clearedStr ? JSON.parse(clearedStr) : [];
+    } catch (e) {
+      console.warn("Failed to parse cleared cases:", e);
+    }
+
     try {
       const storedCases = localStorage.getItem("verdict_custom_cases");
       const customCases = storedCases ? JSON.parse(storedCases) : [];
-      
-      const allCases = [...staticCases];
       customCases.forEach(customCase => {
-        if (!allCases.some(c => c.id === customCase.id)) {
-          allCases.push(customCase);
+        if (!localCases.some(c => c.id === customCase.id)) {
+          localCases.push(customCase);
         }
       });
-      
-      setCases(allCases);
-      setLoading(false);
     } catch (err) {
-      setCases(staticCases);
-      setLoading(false);
+      console.warn("Failed to load local storage cases:", err);
     }
+
+    // Filter out cleared cases immediately
+    localCases = localCases.filter(c => !clearedCases.includes(c.id));
+
+    // 2. Fetch from backend to get updated case statuses (e.g. verdict_reached)
+    fetch("http://localhost:8000/api/cases")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load cases from backend server.");
+        return res.json();
+      })
+      .then((backendCases) => {
+        // Merge backend cases with local baseline, prioritizing backend status
+        const mergedCases = [...localCases];
+        backendCases.forEach(bCase => {
+          // If the case is cleared, do not include it
+          if (clearedCases.includes(bCase.id)) return;
+          
+          const idx = mergedCases.findIndex(c => c.id === bCase.id);
+          if (idx !== -1) {
+            mergedCases[idx] = bCase;
+          } else {
+            mergedCases.push(bCase);
+          }
+        });
+        setCases(mergedCases);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.warn("Backend connection offline, using local data storage:", err.message);
+        setCases(localCases);
+        setLoading(false);
+      });
   }, []);
+
+  const handleClear = (caseId) => {
+    if (window.confirm("Clear this case? This cannot be undone.")) {
+      fetch(`http://localhost:8000/api/cases/${caseId}`, {
+        method: "DELETE"
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to delete case from database.");
+          return res.json();
+        })
+        .then(() => {
+          // 1. Add to cleared cases list in localStorage
+          const clearedStr = localStorage.getItem("verdict_cleared_cases") || "[]";
+          const cleared = JSON.parse(clearedStr);
+          if (!cleared.includes(caseId)) {
+            cleared.push(caseId);
+            localStorage.setItem("verdict_cleared_cases", JSON.stringify(cleared));
+          }
+          
+          // 2. Remove from custom cases in localStorage if present
+          const customStr = localStorage.getItem("verdict_custom_cases") || "[]";
+          const custom = JSON.parse(customStr);
+          const updatedCustom = custom.filter(c => c.id !== caseId);
+          localStorage.setItem("verdict_custom_cases", JSON.stringify(updatedCustom));
+          
+          // 3. Update react state to immediately remove from DOM
+          setCases(prev => prev.filter(c => c.id !== caseId));
+        })
+        .catch((err) => {
+          console.error("Error clearing case:", err);
+          alert("Error clearing case: " + err.message);
+        });
+    }
+  };
 
   if (loading) {
     return (
@@ -228,6 +299,7 @@ export default function Docket() {
                 ctaHref={`/trial/${item.id}`}
                 imageUrl={getCaseImage(item.domain)}
                 gradient={getDomainGradient(item.domain)}
+                onClear={item.status === "verdict_reached" ? () => handleClear(item.id) : undefined}
               />
             ))}
           </div>
