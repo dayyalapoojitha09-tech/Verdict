@@ -3,11 +3,21 @@ import json
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load environment variables — try .env first, then fall back to new.env (which is tracked by git for collaborators)
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-new_dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "new.env")
-load_dotenv(dotenv_path)
-load_dotenv(new_dotenv_path)  # fallback: won't overwrite existing keys from .env
+# Load environment variables from .env and new.env in both the backend and backend/app directories
+ENV_FILES = [
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "new.env"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "new.env"),
+]
+
+def reload_env_vars():
+    for path in ENV_FILES:
+        if os.path.exists(path):
+            load_dotenv(path, override=True)
+
+# Initial load
+reload_env_vars()
 
 grok_api_key = os.environ.get("GROK_API_KEY") or os.environ.get("GROQ_API_KEY")
 
@@ -18,7 +28,7 @@ MODEL_NAME = "llama-3.3-70b-versatile"
 
 def call_grok_api(system_instruction: str, user_message: str, response_json: bool = False) -> str:
     # Hot-reload environment variables to capture newly added keys
-    load_dotenv(dotenv_path)
+    reload_env_vars()
     active_key = os.environ.get("GROK_API_KEY") or os.environ.get("GROQ_API_KEY")
 
     if not active_key:

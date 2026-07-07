@@ -1,0 +1,6 @@
+@echo off
+echo Starting Backend Server on http://127.0.0.1:8000...
+start "Verdict Backend Server" cmd /k "cd backend && python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload"
+
+echo Starting Frontend on http://localhost:5173...
+cd frontend && npm run dev
