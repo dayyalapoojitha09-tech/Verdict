@@ -39,45 +39,27 @@ export default function AddCase() {
 
     setSubmitting(true);
 
-    const payload = {
+    const newCase = {
+      id: crypto.randomUUID(),
       title: title.trim(),
       domain: domain,
       description: description.trim(),
       evidence_notes: evidenceNotes.trim() || "No incriminating evidence provided.",
       counter_evidence_notes: counterEvidenceNotes.trim() || "No exculpatory evidence provided.",
+      status: "pending",
     };
 
-    fetch("http://localhost:8000/api/cases", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((json) => {
-            throw new Error(json.detail || "Failed to submit new case.");
-          });
-        }
-        return res.json();
-      })
-      .then((newCase) => {
-        try {
-          const storedCases = localStorage.getItem("verdict_custom_cases");
-          const customCases = storedCases ? JSON.parse(storedCases) : [];
-          customCases.push(newCase);
-          localStorage.setItem("verdict_custom_cases", JSON.stringify(customCases));
-        } catch (e) {
-          console.error("Failed to save case locally:", e);
-        }
-        setSubmitting(false);
-        navigate("/");
-      })
-      .catch((err) => {
-        setError(err.message || "Failed to connect to the courtroom database.");
-        setSubmitting(false);
-      });
+    try {
+      const storedCases = localStorage.getItem("verdict_custom_cases");
+      const customCases = storedCases ? JSON.parse(storedCases) : [];
+      customCases.push(newCase);
+      localStorage.setItem("verdict_custom_cases", JSON.stringify(customCases));
+      setSubmitting(false);
+      navigate("/");
+    } catch (e) {
+      setError("Failed to save case locally: " + e.message);
+      setSubmitting(false);
+    }
   };
 
   return (

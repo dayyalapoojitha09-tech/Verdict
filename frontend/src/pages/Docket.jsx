@@ -103,37 +103,22 @@ export default function Docket() {
       console.warn("Failed to load local storage cases:", err);
     }
 
-    // Filter out cleared cases immediately
+    // Filter out cleared cases
     localCases = localCases.filter(c => !clearedCases.includes(c.id));
 
-    // 2. Fetch from backend to get updated case statuses (e.g. verdict_reached)
-    fetch("http://localhost:8000/api/cases")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load cases from backend server.");
-        return res.json();
-      })
-      .then((backendCases) => {
-        // Merge backend cases with local baseline, prioritizing backend status
-        const mergedCases = [...localCases];
-        backendCases.forEach(bCase => {
-          // If the case is cleared, do not include it
-          if (clearedCases.includes(bCase.id)) return;
+    // Check localStorage for any verdict statuses
+    try {
+      const trialResults = localStorage.getItem("verdict_trial_results");
+      const results = trialResults ? JSON.parse(trialResults) : {};
+      localCases = localCases.map(c => 
+        results[c.id] ? { ...c, status: "verdict_reached" } : c
+      );
+    } catch (e) {
+      console.warn("Failed to read trial results:", e);
+    }
 
-          const idx = mergedCases.findIndex(c => c.id === bCase.id);
-          if (idx !== -1) {
-            mergedCases[idx] = bCase;
-          } else {
-            mergedCases.push(bCase);
-          }
-        });
-        setCases(mergedCases);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.warn("Backend connection offline, using local data storage:", err.message);
-        setCases(localCases);
-        setLoading(false);
-      });
+    setCases(localCases);
+    setLoading(false);
   }, []);
 
   const clearCaseLocally = (caseId) => {
@@ -157,34 +142,19 @@ export default function Docket() {
 
   const handleClear = (caseId) => {
     if (window.confirm("Clear this case? This cannot be undone.")) {
-      fetch(`http://localhost:8000/api/cases/${caseId}`, {
-        method: "DELETE"
-      })
-        .then((res) => {
-          if (res.status === 404) {
-            // Case doesn't exist in backend DB (local-only case) — clear locally
-            clearCaseLocally(caseId);
-            return;
-          }
-          if (!res.ok) throw new Error("Failed to delete case from database.");
-          return res.json();
-        })
-        .then((data) => {
-          if (data) {
-            // Successfully deleted from backend — now clear locally too
-            clearCaseLocally(caseId);
-          }
-        })
-        .catch((err) => {
-          // If backend is offline, still allow local clearing
-          if (err.message === "Failed to fetch" || err.name === "TypeError") {
-            console.warn("Backend offline, clearing case locally:", caseId);
-            clearCaseLocally(caseId);
-          } else {
-            console.error("Error clearing case:", err);
-            alert("Error clearing case: " + err.message);
-          }
-        });
+      clearCaseLocally(caseId);
+      
+      // Also remove trial results for this case
+      try {
+        const trialResults = localStorage.getItem("verdict_trial_results");
+        if (trialResults) {
+          const results = JSON.parse(trialResults);
+          delete results[caseId];
+          localStorage.setItem("verdict_trial_results", JSON.stringify(results));
+        }
+      } catch (e) {
+        console.warn("Failed to clear trial results:", e);
+      }
     }
   };
 

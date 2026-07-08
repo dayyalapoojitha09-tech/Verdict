@@ -62,56 +62,41 @@ export default function Trial() {
     setFetchingCase(true);
     setError(null);
     
-    const foundCase = staticCases.find(c => c.id === caseId);
+    // Try static seed cases first
+    let foundCase = staticCases.find(c => c.id === caseId);
+    
+    // If not found in static, check localStorage custom cases
+    if (!foundCase) {
+      try {
+        const storedCases = localStorage.getItem("verdict_custom_cases");
+        const customCases = storedCases ? JSON.parse(storedCases) : [];
+        foundCase = customCases.find(c => c.id === caseId);
+      } catch (e) {
+        console.warn("Failed to load custom cases:", e);
+      }
+    }
+    
     if (foundCase) {
       setCaseData(foundCase);
-      // Fetch trial log if available on backend
-      fetch(`http://localhost:8000/api/cases/${caseId}/trial`)
-        .then((res) => {
-          if (!res.ok) return null;
-          return res.json();
-        })
-        .then((trialJson) => {
-          if (trialJson) {
-            setTrialLogs(trialJson);
-            setShowProsecutor(true);
-            setShowDefense(true);
-            setShowVerdict(true);
-          }
-          setFetchingCase(false);
-        })
-        .catch((err) => {
-          console.warn("Backend trial log fetch failed (offline mode):", err.message);
-          setFetchingCase(false);
-        });
+      
+      // Check localStorage for existing trial results
+      try {
+        const trialResults = localStorage.getItem("verdict_trial_results");
+        const results = trialResults ? JSON.parse(trialResults) : {};
+        if (results[caseId]) {
+          setTrialLogs(results[caseId]);
+          setShowProsecutor(true);
+          setShowDefense(true);
+          setShowVerdict(true);
+        }
+      } catch (e) {
+        console.warn("Failed to load trial results:", e);
+      }
+      
+      setFetchingCase(false);
     } else {
-      // Fetch custom case details from backend
-      fetch(`http://localhost:8000/api/cases/${caseId}`)
-        .then((res) => {
-          if (!res.ok) throw new Error("Could not retrieve case details from the database.");
-          return res.json();
-        })
-        .then((caseJson) => {
-          setCaseData(caseJson);
-          return fetch(`http://localhost:8000/api/cases/${caseId}/trial`);
-        })
-        .then((res) => {
-          if (!res.ok) return null;
-          return res.json();
-        })
-        .then((trialJson) => {
-          if (trialJson) {
-            setTrialLogs(trialJson);
-            setShowProsecutor(true);
-            setShowDefense(true);
-            setShowVerdict(true);
-          }
-          setFetchingCase(false);
-        })
-        .catch((err) => {
-          setError(err.message);
-          setFetchingCase(false);
-        });
+      setError("Case not found. It may have been cleared.");
+      setFetchingCase(false);
     }
   }, [caseId]);
 
@@ -125,17 +110,35 @@ export default function Trial() {
     setShowDefense(false);
     setShowVerdict(false);
     
-    fetch(`http://localhost:8000/api/cases/${caseId}/trial`, {
-      method: "POST"
+    // Call the /api/run-trial serverless function with case data
+    fetch("/api/run-trial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: caseData.title,
+        description: caseData.description,
+        evidence_notes: caseData.evidence_notes,
+        counter_evidence_notes: caseData.counter_evidence_notes,
+      }),
     })
       .then((res) => {
-        if (!res.ok) throw new Error("The AI Tribunal encountered a processing exception.");
+        if (!res.ok) return res.json().then(j => { throw new Error(j.error || "The AI Tribunal encountered a processing exception."); });
         return res.json();
       })
       .then((data) => {
         setTrialLogs(data);
         setRunningTrial(false);
         
+        // Persist trial results in localStorage
+        try {
+          const trialResults = localStorage.getItem("verdict_trial_results");
+          const results = trialResults ? JSON.parse(trialResults) : {};
+          results[caseId] = data;
+          localStorage.setItem("verdict_trial_results", JSON.stringify(results));
+        } catch (e) {
+          console.error("Failed to save trial results:", e);
+        }
+
         // Also update the case status in localStorage to 'verdict_reached'
         try {
           const storedCases = localStorage.getItem("verdict_custom_cases");
@@ -165,6 +168,7 @@ export default function Trial() {
         setRunningTrial(false);
       });
   };
+
 
   if (fetchingCase) {
     return (

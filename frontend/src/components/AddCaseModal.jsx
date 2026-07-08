@@ -26,37 +26,27 @@ export default function AddCaseModal({ isOpen, onClose, onCaseAdded }) {
     setSubmitting(true);
 
     const payload = {
+      id: crypto.randomUUID(),
       title: title.trim(),
       domain: domain,
       description: description.trim(),
       evidence_notes: evidenceNotes.trim(),
       counter_evidence_notes: counterEvidenceNotes.trim(),
+      status: "pending",
     };
 
-    fetch("http://localhost:8000/api/cases", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then((json) => {
-            throw new Error(json.detail || "Failed to submit new case.");
-          });
-        }
-        return res.json();
-      })
-      .then((newCase) => {
-        setSubmitting(false);
-        onCaseAdded(newCase);
-        handleClose();
-      })
-      .catch((err) => {
-        setError(err.message);
-        setSubmitting(false);
-      });
+    try {
+      const storedCases = localStorage.getItem("verdict_custom_cases");
+      const customCases = storedCases ? JSON.parse(storedCases) : [];
+      customCases.push(payload);
+      localStorage.setItem("verdict_custom_cases", JSON.stringify(customCases));
+      setSubmitting(false);
+      onCaseAdded(payload);
+      handleClose();
+    } catch (err) {
+      setError(err.message);
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
