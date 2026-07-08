@@ -83,7 +83,7 @@ export default function Docket() {
     // 1. Gather all local cases (seeded + custom cases from localStorage)
     let localCases = [...staticCases];
     let clearedCases = [];
-    
+
     try {
       const clearedStr = localStorage.getItem("verdict_cleared_cases");
       clearedCases = clearedStr ? JSON.parse(clearedStr) : [];
@@ -118,7 +118,7 @@ export default function Docket() {
         backendCases.forEach(bCase => {
           // If the case is cleared, do not include it
           if (clearedCases.includes(bCase.id)) return;
-          
+
           const idx = mergedCases.findIndex(c => c.id === bCase.id);
           if (idx !== -1) {
             mergedCases[idx] = bCase;
@@ -144,13 +144,13 @@ export default function Docket() {
       cleared.push(caseId);
       localStorage.setItem("verdict_cleared_cases", JSON.stringify(cleared));
     }
-    
+
     // 2. Remove from custom cases in localStorage if present
     const customStr = localStorage.getItem("verdict_custom_cases") || "[]";
     const custom = JSON.parse(customStr);
     const updatedCustom = custom.filter(c => c.id !== caseId);
     localStorage.setItem("verdict_custom_cases", JSON.stringify(updatedCustom));
-    
+
     // 3. Update react state to immediately remove from DOM
     setCases(prev => prev.filter(c => c.id !== caseId));
   };
@@ -225,7 +225,7 @@ export default function Docket() {
       <section className="min-h-[85vh] flex flex-col items-center justify-center text-center px-6 border-b border-black/10">
         <div className="space-y-6">
           <span className="meta-mono text-neutral-400 text-xs tracking-[0.2em] uppercase">VERDICT TRIBUNAL</span>
-          
+
           {/* Staggered text character reveal */}
           <h1 className="headline-huge uppercase tracking-tighter text-[12vw] leading-[0.8] mb-8 select-none">
             {"verdict".split("").map((char, idx) => (
@@ -239,7 +239,7 @@ export default function Docket() {
               </span>
             ))}
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-neutral-500 max-w-3xl mx-auto font-light leading-relaxed tracking-tight mt-8">
             Securing operations through automated adversarial reasoning. Three AI personas debate critical alerts to unveil the ground truth.
           </p>
@@ -263,7 +263,7 @@ export default function Docket() {
                   alt={item.title}
                   className={`absolute inset-0 w-full h-full object-cover img-editorial opacity-60 group-hover:opacity-90 ${getAsymmetricRadius(idx)}`}
                 />
-                
+
                 {/* Fallback styling/mask on card container */}
                 <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent ${getAsymmetricRadius(idx)}`} />
 
