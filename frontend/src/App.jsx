@@ -4,11 +4,15 @@ import Docket from "./pages/Docket";
 import Trial from "./pages/Trial";
 import AddCase from "./pages/AddCase";
 import CustomCursor from "./components/CustomCursor";
+import ScrollToTop from "./components/ScrollToTop";
 import { Plus } from "lucide-react";
 
 function App() {
   return (
     <Router>
+      {/* Reset scroll position on route change */}
+      <ScrollToTop />
+
       {/* Custom lagging interactive cursor */}
       <CustomCursor />
 
